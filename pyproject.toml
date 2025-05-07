@@ -1,0 +1,18 @@
+[tool.poetry]
+name = "accounting-and-academic-performance"
+version = "0.1.0"
+description = "School schedule bot"
+authors = ["Your Name <your@email.com>"]
+packages = [
+    { include = "school_bot" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.13"  # Явно указываем 3.13
+aiogram = {version = "^3.0.0", allow-prereleases = true}  # Разрешаем предрелизные версии
+apscheduler = {version = "^3.10.0", allow-prereleases = true}
+python-dotenv = "^1.0.0"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
