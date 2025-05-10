@@ -3,16 +3,28 @@ name = "accounting-and-academic-performance"
 version = "0.1.0"
 description = "School schedule bot"
 authors = ["Your Name <your@email.com>"]
-packages = [
-    { include = "school_bot" }
-]
+readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.13"  # Явно указываем 3.13
-aiogram = {version = "^3.0.0", allow-prereleases = true}  # Разрешаем предрелизные версии
-apscheduler = {version = "^3.10.0", allow-prereleases = true}
+python = "^3.13"
+aiogram = "^3.0.0"
 python-dotenv = "^1.0.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "7.4.4"  # Фиксированная версия
+pytest-cov = "4.1.0"
+pytest-asyncio = "0.23.5"  # Совместимая версия
+pytest-mock = "3.12.0"
+
+[[tool.poetry.packages]]
+include = "src"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+addopts = "--cov=src --cov-report=term-missing"
+asyncio_mode = "auto"
