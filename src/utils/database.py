@@ -4,9 +4,24 @@ from pathlib import Path
 # Новые пути
 DB_FILE = Path("data/users.json")
 SCHEDULE_FILE = Path("data/schedule.json")
-
+BEHAVIOR_FILE = Path("data/behavior.json")
+BEHAVIOR_FILE.parent.mkdir(parents=True, exist_ok=True)
 # Гарантируем, что папка существует
 DB_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+def save_behavior_data(entry: dict):
+    data = []
+    if BEHAVIOR_FILE.exists():
+        try:
+            with open(BEHAVIOR_FILE, "r", encoding="utf-8") as f:
+                data = json.load(f)
+        except json.JSONDecodeError:
+            data = []
+
+    data.append(entry)
+
+    with open(BEHAVIOR_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
 
 def save_user_data(user_id: str, data: dict):
     if DB_FILE.exists():
@@ -45,3 +60,20 @@ def load_schedule() -> dict:
 def save_schedule(data: dict):
     with open(SCHEDULE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
+
+BEHAVIOR_FILE = Path("data/behavior.json")
+
+def load_behavior_data() -> dict:
+    if not BEHAVIOR_FILE.exists():
+        return {}
+    try:
+        with open(BEHAVIOR_FILE, "r", encoding="utf-8") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        return {}
+
+def save_behavior_data(data: dict):
+    with open(BEHAVIOR_FILE, "w", encoding="utf-8") as f:
+        json.dump(data, f, ensure_ascii=False, indent=4)
+
+
