@@ -1,0 +1,25 @@
+{
+    "5835338188": {
+        "id": "793904bd-e6eb-49d6-b25f-4bbc7ffef852",
+        "telegram_id": "5835338188",
+        "fullname": "олгнег",
+        "role": "Родитель",
+        "authenticated": false,
+        "child_name": "гнк"
+    },
+    "1111": {
+        "id": "abc123",
+        "telegram_id": "1111",
+        "fullname": "Иванова Мария",
+        "role": "Родитель",
+        "child_name": "Иванов Петя",
+        "authenticated": true
+    },
+    "9999": {
+        "id": "x456",
+        "telegram_id": "9999",
+        "fullname": "Учитель Иван",
+        "role": "Учитель",
+        "authenticated": true
+    }
+}

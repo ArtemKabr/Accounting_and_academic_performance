@@ -1,37 +1,109 @@
-from src.keyboards.inline import get_role_keyboard, get_main_menu  # Один импорт, удалите дублирующийся
-from aiogram import types
+from aiogram import Router, types
 from aiogram.fsm.context import FSMContext
-from aiogram.filters import Command  # Правильный импорт для Command в aiogram 3.x
-from loader import dp
-from src.utils.database import load_users_db
-from aiogram.fsm.state import State  # Импорт состояния
-from aiogram.fsm.context import FSMContext  # Импорт FSMContext для работы с состояниями
+from aiogram.types import ReplyKeyboardMarkup, KeyboardButton
+from aiogram.filters import Command
+from src.states.registration import Registration
+from src.utils.database import save_user_data
+import uuid
 
-# Загрузим данные из базы пользователей
-users_db = load_users_db()
+router = Router()
 
-# Определим состояния для регистрации
-class RegistrationState(State):
-    choosing_role = "choosing_role"  # Пример состояния
+PARENT_PASSWORD = "1234"
+TEACHER_PASSWORD = "4321"
 
-# Обработчик для команды /start
-@dp.message(Command("start"))
-async def cmd_start(message: types.Message, state: FSMContext):
-    user_id = str(message.from_user.id)
+def nav_keyboard():
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="⬅️ Назад")]],
+        resize_keyboard=True
+    )
 
-    # Проверка, если пользователь есть в базе данных
-    if user_id in users_db:
-        user_data = users_db[user_id]
-        role = user_data.get("role", "parent")  # Определение роли пользователя
-        await message.answer(
-            f"🔹 Вы авторизованы как {user_data.get('role_name', 'Родитель' if role == 'parent' else 'Учитель')}",
-            reply_markup=get_main_menu(role)  # Отправка клавиатуры в зависимости от роли
-        )
+def main_menu_keyboard(role):
+    buttons = [
+        [KeyboardButton(text="📋 Мои данные"), KeyboardButton(text="📅 Расписание")],
+        [KeyboardButton(text="🔓 Выйти")]
+    ]
+    return ReplyKeyboardMarkup(keyboard=buttons, resize_keyboard=True)
+
+# ▶️ /start
+@router.message(Command("start"))
+async def start_cmd(message: types.Message, state: FSMContext):
+    keyboard = ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text="Учитель"), KeyboardButton(text="Родитель")]],
+        resize_keyboard=True
+    )
+    await message.answer("Выберите роль:", reply_markup=keyboard)
+    await state.set_state(Registration.choosing_role)
+
+# 🔸 Выбор роли
+@router.message(Registration.choosing_role)
+async def choose_role(message: types.Message, state: FSMContext):
+    if message.text not in ["Учитель", "Родитель"]:
+        return await message.answer("Пожалуйста, выберите: Учитель или Родитель.")
+    await state.update_data(role=message.text)
+    await message.answer("🔑 Введите пароль для вашей роли:", reply_markup=nav_keyboard())
+    await state.set_state(Registration.entering_password)
+
+# 🔐 Проверка пароля
+@router.message(Registration.entering_password)
+async def verify_password(message: types.Message, state: FSMContext):
+    user_input = message.text.strip()
+    data = await state.get_data()
+    role = data.get("role")
+
+    if (role == "Учитель" and user_input == TEACHER_PASSWORD) or \
+       (role == "Родитель" and user_input == PARENT_PASSWORD):
+        await message.answer("✍️ Введите ваше ФИО:")
+        await state.set_state(Registration.entering_fullname)
     else:
-        # Если пользователя нет в базе, предложим выбрать роль
-        await message.answer(
-            "👋 Добро пожаловать! Выберите вашу роль:",
-            reply_markup=get_role_keyboard()  # Отправка клавиатуры для выбора роли
-        )
-        # Устанавливаем состояние для выбора роли
-        await state.set_state(RegistrationState.choosing_role)
+        await message.answer("❌ Неверный пароль. Попробуйте снова.")
+
+# 🧾 Ввод ФИО
+@router.message(Registration.entering_fullname)
+async def enter_fullname(message: types.Message, state: FSMContext):
+    fullname = message.text.strip()
+    await state.update_data(fullname=fullname)
+    data = await state.get_data()
+
+    if data.get("role") == "Родитель":
+        await message.answer("👶 Введите ФИО вашего ребёнка:")
+        await state.set_state(Registration.entering_child_name)
+    else:
+        await finish_registration(message, state)
+
+# 👶 Ребёнок
+@router.message(Registration.entering_child_name)
+async def enter_child_name(message: types.Message, state: FSMContext):
+    child_name = message.text.strip()
+    await state.update_data(child_name=child_name)
+    await finish_registration(message, state)
+
+# ✅ Завершение
+async def finish_registration(message: types.Message, state: FSMContext):
+    data = await state.get_data()
+    user_id = str(message.from_user.id)
+    user_uuid = str(uuid.uuid4())
+
+    user_data = {
+        "id": user_uuid,
+        "telegram_id": user_id,
+        "fullname": data.get("fullname"),
+        "role": data.get("role"),
+        "authenticated": True
+    }
+
+    if data["role"] == "Родитель":
+        user_data["child_name"] = data.get("child_name")
+
+    save_user_data(user_id, user_data)
+
+    msg = (
+        f"🎉 Регистрация завершена!\n"
+        f"🆔 ID: {user_uuid}\n"
+        f"👤 ФИО: {user_data['fullname']}\n"
+        f"📌 Роль: {user_data['role']}"
+    )
+    if user_data["role"] == "Родитель":
+        msg += f"\n👶 Ребёнок: {user_data['child_name']}"
+
+    await message.answer(msg, reply_markup=main_menu_keyboard(user_data["role"]))
+    await state.clear()

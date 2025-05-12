@@ -307,6 +307,17 @@ files = [
 toml = ["tomli ; python_full_version <= \"3.11.0a6\""]
 
 [[package]]
+name = "dp"
+version = "1.00"
+description = "Automatically transform recursive functions to dynamic programming"
+optional = false
+python-versions = "*"
+groups = ["main"]
+files = [
+    {file = "dp-1.00.tar.gz", hash = "sha256:77eb01be83fe81139f1eb7871b93300b27f372b283146b7410d6195b4db19900"},
+]
+
+[[package]]
 name = "frozenlist"
 version = "1.6.0"
 description = "A list-like structure which implements collections.abc.MutableSequence"
@@ -1087,4 +1098,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = "^3.13"
-content-hash = "2461340346b2626e842f721e5361e5930db195cec358c7c3d4d1b89c7db2fc7c"
+content-hash = "39c03a86724d2a8a0255300aee9272ed40345366724e88b27ab49523ef4e6439"
