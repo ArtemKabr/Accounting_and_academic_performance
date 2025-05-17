@@ -13,6 +13,9 @@ class Registration(StatesGroup):
     entering_behavior_name = State()
     entering_behavior_rating = State()
     entering_behavior_comment = State()
+    entering_admin_pin = State()  # Добавить в класс Registration
+    entering_broadcast_text = State()  # 📢 для массовой рассылки
+
 
 
 

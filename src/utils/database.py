@@ -1,37 +1,24 @@
 import json
 from pathlib import Path
+from datetime import datetime
 
-# Новые пути
-DB_FILE = Path("data/users.json")
-SCHEDULE_FILE = Path("data/schedule.json")
-BEHAVIOR_FILE = Path("data/behavior.json")
-BEHAVIOR_FILE.parent.mkdir(parents=True, exist_ok=True)
-# Гарантируем, что папка существует
-DB_FILE.parent.mkdir(parents=True, exist_ok=True)
+# Пути к файлам
+DATA_DIR = Path("src/data")
+DATA_DIR.mkdir(parents=True, exist_ok=True)
 
-def save_behavior_data(entry: dict):
-    data = []
-    if BEHAVIOR_FILE.exists():
-        try:
-            with open(BEHAVIOR_FILE, "r", encoding="utf-8") as f:
-                data = json.load(f)
-        except json.JSONDecodeError:
-            data = []
+DB_FILE = DATA_DIR / "users.json"
+SCHEDULE_FILE = DATA_DIR / "schedule.json"
+BEHAVIOR_FILE = DATA_DIR / "behavior.json"
 
-    data.append(entry)
-
-    with open(BEHAVIOR_FILE, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=4)
-
+# ----------- USERS ----------------
 def save_user_data(user_id: str, data: dict):
+    users = {}
     if DB_FILE.exists():
         try:
             with open(DB_FILE, "r", encoding="utf-8") as f:
                 users = json.load(f)
         except json.JSONDecodeError:
             users = {}
-    else:
-        users = {}
 
     users[user_id] = data
 
@@ -48,6 +35,7 @@ def load_user_data(user_id: str) -> dict | None:
     except json.JSONDecodeError:
         return None
 
+# ----------- SCHEDULE -------------
 def load_schedule() -> dict:
     if not SCHEDULE_FILE.exists():
         return {}
@@ -61,18 +49,20 @@ def save_schedule(data: dict):
     with open(SCHEDULE_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
-BEHAVIOR_FILE = Path("data/behavior.json")
-
-def load_behavior_data() -> dict:
+# ----------- BEHAVIOR -------------
+def load_behavior_data() -> list:
     if not BEHAVIOR_FILE.exists():
-        return {}
+        return []
     try:
         with open(BEHAVIOR_FILE, "r", encoding="utf-8") as f:
             return json.load(f)
     except json.JSONDecodeError:
-        return {}
+        return []
 
-def save_behavior_data(data: dict):
+def append_behavior_entry(entry: dict):
+    entry["дата"] = datetime.now().strftime("%Y-%m-%d %H:%M")
+    data = load_behavior_data()  # ты уже внутри этого модуля!
+    data.append(entry)
     with open(BEHAVIOR_FILE, "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)
 
